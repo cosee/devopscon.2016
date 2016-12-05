@@ -1,0 +1,46 @@
+service: serverless-peer-reward
+provider:
+  name: aws
+  runtime: java8
+
+  memorySize: 512
+  timeout: 10
+
+  stage: dev
+  region: eu-central-1
+
+  environment:
+    TABLE_PREFIX: ${self:provider.stage}-devopscon
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource: "*"
+
+package:
+  artifact: target/serverless-peer-reward-dev.jar
+
+functions:
+  users:
+    handler: biz.cosee.talks.serverless.lambda.users.UserHandler
+    events:
+      - http:
+          path: users
+          method: get
+          cors: true
+
+  rewards:
+    handler: biz.cosee.talks.serverless.lambda.rewards.RewardHandler
+    events:
+      - http:
+          path: rewards
+          method: any
+          cors: true
+
+  generate:
+    handler: biz.cosee.talks.serverless.lambda.schedule.RandomRewardHandler
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          enabled: false
